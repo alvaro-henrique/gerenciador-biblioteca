@@ -1,0 +1,7 @@
+[
+  {"id": 1, "nome": "Mateus Araujo", "cpf": "79123456710", "email": "mateus.araujo@biblioteca.com", "telefone": "84987716903", "registro": "REG101", "cargo": "Assistente Administrativo", "ativo": true},
+  {"id": 2, "nome": "Juliana Ferreira", "cpf": "78912345664", "email": "juliana.ferreira@biblioteca.com", "telefone": "84997865432", "registro": "REG102", "cargo": "Auxiliar de Biblioteca", "ativo": true},
+  {"id": 3, "nome": "Ricardo Nunes", "cpf": "81234567865", "email": "ricardo.nunes@biblioteca.com", "telefone": "84998976543", "registro": "REG103", "cargo": "Bibliotecario", "ativo": true},
+  {"id": 4, "nome": "Patricia Gomes", "cpf": "82345678968", "email": "patricia.gomes@biblioteca.com", "telefone": "84997654321", "registro": "REG104", "cargo": "Coordenadora de Acervo", "ativo": true},
+  {"id": 5, "nome": "Eduardo Sales", "cpf": "83456789122", "email": "eduardo.sales@biblioteca.com", "telefone": "84996543210", "registro": "REG105", "cargo": "Tecnico de Atendimento", "ativo": true}
+]

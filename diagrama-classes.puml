@@ -1,0 +1,201 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+class Main {
+  +main(args: String[]): void
+}
+
+class BibliotecaApp {
+  -scanner: Scanner
+  -biblioteca: Biblioteca
+  -repositorio: RepositorioBibliotecaArquivo
+  +executar(): void
+}
+
+class Biblioteca {
+  -usuarios: Map<Integer, Usuario>
+  -funcionarios: Map<Integer, Funcionario>
+  -itens: Map<Integer, ItemAcervo>
+  -emprestimos: List<Emprestimo>
+  -reservas: List<Reserva>
+  -multas: List<Multa>
+  +cadastrarAluno(...): Aluno
+  +cadastrarProfessor(...): Professor
+  +cadastrarFuncionario(...): Funcionario
+  +cadastrarLivro(...): Livro
+  +registrarEmprestimo(usuarioId: int, itemId: int): Emprestimo
+  +devolverEmprestimo(emprestimoId: int): double
+  +renovarEmprestimo(emprestimoId: int): void
+  +cancelarEmprestimo(emprestimoId: int): void
+  +reservarItem(usuarioId: int, itemId: int): Reserva
+  +atenderReserva(reservaId: int): Emprestimo
+  +pagarMulta(multaId: int): void
+}
+
+abstract class Pessoa {
+  -id: int
+  -nome: String
+  -cpf: String
+}
+
+abstract class Usuario {
+  -email: String
+  -telefone: String
+  -ativo: boolean
+  +getLimiteEmprestimos(): int
+  +getDiasEmprestimo(): int
+  +calcularMulta(diasAtraso: int): double
+}
+
+class Aluno {
+  -matricula: String
+  -curso: String
+}
+
+class Professor {
+  -siape: String
+  -departamento: String
+}
+
+class Funcionario {
+  -email: String
+  -telefone: String
+  -registro: String
+  -cargo: String
+  -ativo: boolean
+}
+
+class Autor
+class Categoria
+
+abstract class ItemAcervo {
+  -id: int
+  -titulo: String
+  -anoPublicacao: int
+  -categoria: Categoria
+  -disponivel: boolean
+  +permiteRenovacao(): boolean
+  +getMaximoRenovacoes(): int
+}
+
+class Livro {
+  -isbn: String
+  -autor: Autor
+  -editora: String
+}
+
+class Revista {
+  -issn: String
+  -numeroEdicao: int
+  -periodicidade: String
+}
+
+class Emprestimo {
+  -id: int
+  -usuario: Usuario
+  -item: ItemAcervo
+  -dataEmprestimo: LocalDate
+  -dataPrevistaDevolucao: LocalDate
+  -dataDevolucao: LocalDate
+  -estado: EstadoEmprestimo
+  -renovacoes: int
+}
+
+class Reserva {
+  -id: int
+  -usuario: Usuario
+  -item: ItemAcervo
+  -dataReserva: LocalDate
+  -estado: EstadoReserva
+}
+
+class Multa {
+  -id: int
+  -usuario: Usuario
+  -emprestimo: Emprestimo
+  -dataGeracao: LocalDate
+  -diasAtraso: int
+  -valor: double
+  -paga: boolean
+  -dataPagamento: LocalDate
+}
+
+enum EstadoEmprestimo {
+  ATIVO
+  ATRASADO
+  DEVOLVIDO
+  CANCELADO
+}
+
+enum EstadoReserva {
+  ATIVA
+  ATENDIDA
+  CANCELADA
+}
+
+abstract class Persistencia {
+  +salvar(biblioteca: Biblioteca): void
+  +carregar(biblioteca: Biblioteca): void
+}
+
+class RepositorioBibliotecaArquivo {
+  -pastaDados: Path
+}
+
+class JsonUtil
+
+class BibliotecaException
+class ValidacaoException
+class OperacaoInvalidaException
+class EntidadeNaoEncontradaException
+class PersistenciaException
+class LivroIndisponivelException
+class LimiteEmprestimosException
+class MultaPendenteException
+class UsuarioNaoEncontradoException
+class LivroNaoEncontradoException
+class TransicaoEstadoInvalidaException
+
+Main --> BibliotecaApp
+BibliotecaApp --> Biblioteca
+BibliotecaApp --> RepositorioBibliotecaArquivo
+
+Pessoa <|-- Usuario
+Pessoa <|-- Funcionario
+Usuario <|-- Aluno
+Usuario <|-- Professor
+ItemAcervo <|-- Livro
+ItemAcervo <|-- Revista
+Persistencia <|-- RepositorioBibliotecaArquivo
+
+Biblioteca "1" o-- "0..*" Usuario
+Biblioteca "1" o-- "0..*" Funcionario
+Biblioteca "1" o-- "0..*" ItemAcervo
+Biblioteca "1" o-- "0..*" Emprestimo
+Biblioteca "1" o-- "0..*" Reserva
+Biblioteca "1" o-- "0..*" Multa
+
+Livro --> Autor
+ItemAcervo --> Categoria
+Emprestimo --> Usuario
+Emprestimo --> ItemAcervo
+Reserva --> Usuario
+Reserva --> ItemAcervo
+Multa --> Usuario
+Multa --> Emprestimo
+Emprestimo --> EstadoEmprestimo
+Reserva --> EstadoReserva
+RepositorioBibliotecaArquivo --> JsonUtil
+
+BibliotecaException <|-- ValidacaoException
+BibliotecaException <|-- OperacaoInvalidaException
+BibliotecaException <|-- EntidadeNaoEncontradaException
+BibliotecaException <|-- PersistenciaException
+OperacaoInvalidaException <|-- LivroIndisponivelException
+OperacaoInvalidaException <|-- LimiteEmprestimosException
+OperacaoInvalidaException <|-- MultaPendenteException
+OperacaoInvalidaException <|-- TransicaoEstadoInvalidaException
+EntidadeNaoEncontradaException <|-- UsuarioNaoEncontradoException
+EntidadeNaoEncontradaException <|-- LivroNaoEncontradoException
+@enduml

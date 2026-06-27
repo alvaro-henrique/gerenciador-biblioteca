@@ -1,0 +1,8 @@
+[
+  {"tipo": "Aluno", "id": 1, "nome": "Larissa Menezes", "cpf": "12345678909", "email": "larissa.menezes@biblioteca.com", "telefone": "84991234567", "ativo": true, "matricula": "20240011", "curso": "Sistemas de Informacao"},
+  {"tipo": "Aluno", "id": 2, "nome": "Rafael Duarte", "cpf": "23456789173", "email": "rafael.duarte@biblioteca.com", "telefone": "84992345678", "ativo": true, "matricula": "20240012", "curso": "Engenharia de Software"},
+  {"tipo": "Aluno", "id": 3, "nome": "Camila Nogueira", "cpf": "34567891228", "email": "camila.nogueira@biblioteca.com", "telefone": "84993456789", "ativo": true, "matricula": "20240013", "curso": "Ciencia da Computacao"},
+  {"tipo": "Professor", "id": 4, "nome": "Henrique Tavares", "cpf": "45678912364", "email": "henrique.tavares@biblioteca.com", "telefone": "84994567890", "ativo": true, "siape": "SIAP1001", "departamento": "Computacao"},
+  {"tipo": "Professor", "id": 5, "nome": "Marina Queiroz", "cpf": "56789123482", "email": "marina.queiroz@biblioteca.com", "telefone": "84995678901", "ativo": true, "siape": "SIAP1002", "departamento": "Matematica"},
+  {"tipo": "Professor", "id": 6, "nome": "Paulo Esteves", "cpf": "67891234582", "email": "paulo.esteves@biblioteca.com", "telefone": "84996789012", "ativo": true, "siape": "SIAP1003", "departamento": "Fisica"}
+]
