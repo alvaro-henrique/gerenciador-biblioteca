@@ -62,51 +62,48 @@ public class BibliotecaApp {
                         cadastrarItem();
                         break;
                     case 10:
-                        listarItens();
+                        listarItensComRetorno();
                         break;
                     case 11:
-                        pesquisarItemPorTitulo();
-                        break;
-                    case 12:
                         alterarItem();
                         break;
-                    case 13:
+                    case 12:
                         removerItem();
                         break;
-                    case 14:
+                    case 13:
                         registrarEmprestimo();
                         break;
-                    case 15:
+                    case 14:
                         devolverEmprestimo();
                         break;
-                    case 16:
+                    case 15:
                         renovarEmprestimo();
                         break;
-                    case 17:
+                    case 16:
                         cancelarEmprestimo();
                         break;
-                    case 18:
+                    case 17:
                         listarEmprestimos();
                         break;
-                    case 19:
+                    case 18:
                         reservarItem();
                         break;
-                    case 20:
+                    case 19:
                         atenderReserva();
                         break;
-                    case 21:
+                    case 20:
                         cancelarReserva();
                         break;
-                    case 22:
+                    case 21:
                         listarReservas();
                         break;
-                    case 23:
+                    case 22:
                         listarMultas();
                         break;
-                    case 24:
+                    case 23:
                         pagarMulta();
                         break;
-                    case 25:
+                    case 24:
                         inserirDadosExemplo();
                         break;
                     case 0:
@@ -138,21 +135,20 @@ public class BibliotecaApp {
         System.out.println("8  - Excluir funcionario");
         System.out.println("9  - Cadastrar item");
         System.out.println("10 - Listar itens");
-        System.out.println("11 - Pesquisar item por titulo");
-        System.out.println("12 - Alterar item");
-        System.out.println("13 - Remover item");
-        System.out.println("14 - Registrar emprestimo");
-        System.out.println("15 - Devolver emprestimo");
-        System.out.println("16 - Renovar emprestimo");
-        System.out.println("17 - Cancelar emprestimo");
-        System.out.println("18 - Listar emprestimos");
-        System.out.println("19 - Reservar item emprestado");
-        System.out.println("20 - Atender reserva");
-        System.out.println("21 - Cancelar reserva");
-        System.out.println("22 - Listar reservas");
-        System.out.println("23 - Listar multas");
-        System.out.println("24 - Pagar multa");
-        System.out.println("25 - Inserir dados de exemplo");
+        System.out.println("11 - Alterar item");
+        System.out.println("12 - Remover item");
+        System.out.println("13 - Registrar emprestimo");
+        System.out.println("14 - Devolver emprestimo");
+        System.out.println("15 - Renovar emprestimo");
+        System.out.println("16 - Cancelar emprestimo");
+        System.out.println("17 - Listar emprestimos");
+        System.out.println("18 - Reservar item emprestado");
+        System.out.println("19 - Atender reserva");
+        System.out.println("20 - Cancelar reserva");
+        System.out.println("21 - Listar reservas");
+        System.out.println("22 - Listar multas");
+        System.out.println("23 - Pagar multa");
+        System.out.println("24 - Inserir dados de exemplo");
         System.out.println("0  - Salvar e sair");
     }
 
@@ -206,6 +202,12 @@ public class BibliotecaApp {
     private void listarFuncionariosComRetorno() {
         limparTerminal();
         listarFuncionarios();
+        aguardarRetornoAoMenuPrincipal();
+    }
+
+    private void listarItensComRetorno() {
+        limparTerminal();
+        listarItens();
         aguardarRetornoAoMenuPrincipal();
     }
 
@@ -418,17 +420,19 @@ public class BibliotecaApp {
         String categoriaNome = lerTexto("Categoria: ");
         String categoriaDescricao = lerTexto("Descricao da categoria: ");
         if (tipo == 1) {
-            String isbn = lerTexto("ISBN com 10 ou 13 digitos: ");
+            String isbn = lerIsbnValido("ISBN com 10 ou 13 digitos: ");
             String autorNome = lerTexto("Nome do autor: ");
-            String autorNacionalidade = lerTexto("Nacionalidade do autor: ");
-            String editora = lerTexto("Editora: ");
-            Livro livro = biblioteca.cadastrarLivro(titulo, ano, categoriaNome, categoriaDescricao, isbn, autorNome, autorNacionalidade, editora);
+            Livro livro = biblioteca.cadastrarLivro(titulo, ano, categoriaNome, categoriaDescricao, isbn, autorNome);
+            salvarDados();
+            limparTerminal();
             System.out.println("Livro cadastrado: " + livro);
         } else if (tipo == 2) {
-            String issn = lerTexto("ISSN com 8 digitos: ");
+            String issn = lerIssnValido("ISSN com 8 digitos: ");
             int edicao = lerInteiro("Numero da edicao: ");
             String periodicidade = lerTexto("Periodicidade: ");
             Revista revista = biblioteca.cadastrarRevista(titulo, ano, categoriaNome, categoriaDescricao, issn, edicao, periodicidade);
+            salvarDados();
+            limparTerminal();
             System.out.println("Revista cadastrada: " + revista);
         } else {
             System.out.println("Tipo invalido.");
@@ -441,23 +445,53 @@ public class BibliotecaApp {
             System.out.println("Nenhum item cadastrado.");
             return;
         }
-        itens.forEach(System.out::println);
+
+        List<Livro> livros = new LinkedList<>();
+        List<Revista> revistas = new LinkedList<>();
+
+        for (ItemAcervo item : itens) {
+            if (item instanceof Livro) {
+                livros.add((Livro) item);
+            } else if (item instanceof Revista) {
+                revistas.add((Revista) item);
+            }
+        }
+
+        if (!livros.isEmpty()) {
+            exibirGrupoLivros(livros);
+        }
+
+        if (!revistas.isEmpty()) {
+            if (!livros.isEmpty()) {
+                System.out.println();
+            }
+            exibirGrupoRevistas(revistas);
+        }
     }
 
-    private void pesquisarItemPorTitulo() {
-        String termo = lerTexto("Digite parte do titulo: ");
-        List<ItemAcervo> encontrados = biblioteca.pesquisarItensPorTitulo(termo);
-        if (encontrados.isEmpty()) {
-            System.out.println("Nenhum item encontrado.");
-            return;
-        }
-        encontrados.forEach(System.out::println);
+    private void exibirGrupoLivros(List<Livro> livros) {
+        System.out.println("=== LISTAGEM DE LIVROS ===");
+        livros.forEach(System.out::println);
+    }
+
+    private void exibirGrupoRevistas(List<Revista> revistas) {
+        System.out.println("=== LISTAGEM DE REVISTAS ===");
+        revistas.forEach(System.out::println);
     }
 
     private void alterarItem() throws BibliotecaException {
         listarItens();
-        int id = lerInteiro("ID do item para alterar: ");
-        ItemAcervo item = biblioteca.buscarItem(id);
+        int id;
+        ItemAcervo item;
+        while (true) {
+            id = lerInteiro("ID do item para alterar: ");
+            try {
+                item = biblioteca.buscarItem(id);
+                break;
+            } catch (EntidadeNaoEncontradaException e) {
+                System.out.println("ID invalido. Digite um ID de item existente.");
+            }
+        }
         System.out.println("Alterando: " + item);
         String titulo = lerTexto("Novo titulo: ");
         int ano = lerInteiro("Novo ano de publicacao: ");
@@ -465,17 +499,17 @@ public class BibliotecaApp {
         String descricao = lerTexto("Nova descricao da categoria: ");
         biblioteca.alterarDadosItem(id, titulo, ano, categoria, descricao);
         if (item instanceof Livro) {
-            String isbn = lerTexto("Novo ISBN: ");
+            String isbn = lerIsbnValido("Novo ISBN: ");
             String autor = lerTexto("Novo autor: ");
-            String nacionalidade = lerTexto("Nova nacionalidade do autor: ");
-            String editora = lerTexto("Nova editora: ");
-            biblioteca.alterarDadosLivro(id, isbn, autor, nacionalidade, editora);
+            biblioteca.alterarDadosLivro(id, isbn, autor);
         } else if (item instanceof Revista) {
-            String issn = lerTexto("Novo ISSN: ");
+            String issn = lerIssnValido("Novo ISSN: ");
             int edicao = lerInteiro("Nova edicao: ");
             String periodicidade = lerTexto("Nova periodicidade: ");
             biblioteca.alterarDadosRevista(id, issn, edicao, periodicidade);
         }
+        salvarDados();
+        limparTerminal();
         System.out.println("Item alterado com sucesso.");
     }
 
@@ -483,6 +517,7 @@ public class BibliotecaApp {
         listarItens();
         int id = lerInteiro("ID do item para remover: ");
         biblioteca.removerItem(id);
+        salvarDados();
         System.out.println("Item removido com sucesso.");
     }
 
@@ -582,7 +617,7 @@ public class BibliotecaApp {
         biblioteca.cadastrarProfessor("Carlos Lima", "22233344455", "carlos@email.com", "84988887777", "SIAPE123", "Computacao");
         biblioteca.cadastrarFuncionario("Marina Costa", "33344455566", "marina@email.com", "84977776666", "REG001", "Bibliotecaria");
         biblioteca.cadastrarLivro("Programacao Orientada a Objetos", 2020, "Tecnologia", "Livros de computacao", "9788575220000",
-                "Maria Oliveira", "Brasileira", "Editora Saber");
+                "Maria Oliveira");
         biblioteca.cadastrarRevista("Revista Ciencia Hoje", 2023, "Ciencia", "Revistas cientificas", "12345678", 45, "Mensal");
         System.out.println("Dados de exemplo cadastrados.");
     }
@@ -681,6 +716,29 @@ public class BibliotecaApp {
             System.out.println("Telefone invalido. Digite pelo menos 8 digitos.");
         }
     }
+
+    private String lerIsbnValido(String mensagem) {
+        while (true) {
+            String isbn = lerTexto(mensagem);
+            String isbnNormalizado = isbn == null ? "" : isbn.replaceAll("\\D", "");
+            if (isbnNormalizado.length() == 10 || isbnNormalizado.length() == 13) {
+                return isbnNormalizado;
+            }
+            System.out.println("ISBN invalido. Digite apenas 10 ou 13 digitos.");
+        }
+    }
+
+    private String lerIssnValido(String mensagem) {
+        while (true) {
+            String issn = lerTexto(mensagem);
+            String issnNormalizado = issn == null ? "" : issn.replaceAll("\\D", "");
+            if (issnNormalizado.length() == 8) {
+                return issnNormalizado;
+            }
+            System.out.println("ISSN invalido. Digite exatamente 8 digitos.");
+        }
+    }
+
     private String lerTexto(String mensagem) {
         System.out.print(mensagem);
         return scanner.nextLine().trim();

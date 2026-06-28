@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import br.com.biblioteca.exception.BibliotecaException;
 import br.com.biblioteca.exception.EntidadeNaoEncontradaException;
@@ -20,7 +19,6 @@ import br.com.biblioteca.exception.TransicaoEstadoInvalidaException;
 import br.com.biblioteca.exception.UsuarioNaoEncontradoException;
 import br.com.biblioteca.exception.ValidacaoException;
 import br.com.biblioteca.model.Aluno;
-import br.com.biblioteca.model.Autor;
 import br.com.biblioteca.model.Categoria;
 import br.com.biblioteca.model.Emprestimo;
 import br.com.biblioteca.model.EstadoReserva;
@@ -44,7 +42,6 @@ public class Biblioteca {
     private int proximoUsuarioId = 1;
     private int proximoFuncionarioId = 1;
     private int proximoItemId = 1;
-    private int proximoAutorId = 1;
     private int proximoCategoriaId = 1;
     private int proximoEmprestimoId = 1;
     private int proximoReservaId = 1;
@@ -76,11 +73,10 @@ public class Biblioteca {
     }
 
     public Livro cadastrarLivro(String titulo, int ano, String categoriaNome, String categoriaDescricao, String isbn,
-            String nomeAutor, String nacionalidadeAutor, String editora) throws BibliotecaException {
+            String nomeAutor) throws BibliotecaException {
         validarItemComTituloUnico(titulo, 0);
         Categoria categoria = new Categoria(proximoCategoriaId++, categoriaNome, categoriaDescricao);
-        Autor autor = new Autor(proximoAutorId++, nomeAutor, nacionalidadeAutor);
-        Livro livro = new Livro(proximoItemId++, titulo, ano, categoria, isbn, autor, editora);
+        Livro livro = new Livro(proximoItemId++, titulo, ano, categoria, isbn, nomeAutor);
         itens.put(livro.getId(), livro);
         return livro;
     }
@@ -145,16 +141,14 @@ public class Biblioteca {
         item.setCategoria(new Categoria(proximoCategoriaId++, categoriaNome, categoriaDescricao));
     }
 
-    public void alterarDadosLivro(int id, String isbn, String nomeAutor, String nacionalidadeAutor, String editora)
-            throws BibliotecaException {
+    public void alterarDadosLivro(int id, String isbn, String nomeAutor) throws BibliotecaException {
         ItemAcervo item = buscarItem(id);
         if (!(item instanceof Livro)) {
             throw new OperacaoInvalidaException("Item informado nao e livro.");
         }
         Livro livro = (Livro) item;
         livro.setIsbn(isbn);
-        livro.setAutor(new Autor(proximoAutorId++, nomeAutor, nacionalidadeAutor));
-        livro.setEditora(editora);
+        livro.setNomeAutor(nomeAutor);
     }
 
     public void alterarDadosRevista(int id, String issn, int numeroEdicao, String periodicidade) throws BibliotecaException {
@@ -410,7 +404,6 @@ public class Biblioteca {
     public void adicionarItemCarregado(ItemAcervo item, int autorId, int categoriaId) {
         itens.put(item.getId(), item);
         proximoItemId = Math.max(proximoItemId, item.getId() + 1);
-        proximoAutorId = Math.max(proximoAutorId, autorId + 1);
         proximoCategoriaId = Math.max(proximoCategoriaId, categoriaId + 1);
     }
 
@@ -439,7 +432,6 @@ public class Biblioteca {
         proximoUsuarioId = 1;
         proximoFuncionarioId = 1;
         proximoItemId = 1;
-        proximoAutorId = 1;
         proximoCategoriaId = 1;
         proximoEmprestimoId = 1;
         proximoReservaId = 1;
@@ -448,14 +440,6 @@ public class Biblioteca {
 
     public void atualizarEstadosEmprestimos() {
         emprestimos.forEach(e -> e.atualizarEstadoPorData(LocalDate.now()));
-    }
-
-    public List<ItemAcervo> pesquisarItensPorTitulo(String termo) {
-        String busca = termo == null ? "" : termo.toLowerCase();
-        return itens.values().stream()
-                .filter(i -> i.getTitulo().toLowerCase().contains(busca))
-                .sorted(Comparator.comparing(ItemAcervo::getTitulo))
-                .collect(Collectors.toList());
     }
 
     private void validarCpfUnico(String cpf, Integer usuarioIgnoradoId, Integer funcionarioIgnoradoId) throws ValidacaoException {

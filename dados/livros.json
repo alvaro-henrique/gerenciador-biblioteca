@@ -1,2 +1,3 @@
 [
+  {"id": 1, "titulo": "Java: Como Programar", "anoPublicacao": 2016, "categoriaId": 4, "categoriaNome": "Programacao", "categoriaDescricao": "Livros sobre desenvolvimento de software e linguagem Java", "disponivel": true, "isbn": "9788543004792", "autorNome": "Paul Deitel"}
 ]

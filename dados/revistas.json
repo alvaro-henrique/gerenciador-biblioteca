@@ -1,2 +1,3 @@
 [
+  {"id": 2, "titulo": "Revista Ciencia Hoje", "anoPublicacao": 2024, "categoriaId": 2, "categoriaNome": "Ciencia", "categoriaDescricao": "Periodicos com conteudo cientifico e educacional", "disponivel": true, "issn": "12345678", "numeroEdicao": 52, "periodicidade": "Mensal"}
 ]

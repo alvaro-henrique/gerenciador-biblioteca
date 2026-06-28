@@ -4,14 +4,12 @@ import br.com.biblioteca.exception.ValidacaoException;
 
 public class Livro extends ItemAcervo {
     private String isbn;
-    private Autor autor;
-    private String editora;
+    private String nomeAutor;
 
-    public Livro(int id, String titulo, int anoPublicacao, Categoria categoria, String isbn, Autor autor, String editora) throws ValidacaoException {
+    public Livro(int id, String titulo, int anoPublicacao, Categoria categoria, String isbn, String nomeAutor) throws ValidacaoException {
         super(id, titulo, anoPublicacao, categoria);
         setIsbn(isbn);
-        setAutor(autor);
-        setEditora(editora);
+        setNomeAutor(nomeAutor);
     }
 
     public String getIsbn() {
@@ -21,31 +19,20 @@ public class Livro extends ItemAcervo {
     public void setIsbn(String isbn) throws ValidacaoException {
         String somenteNumeros = isbn == null ? "" : isbn.replaceAll("\\D", "");
         if (!(somenteNumeros.length() == 10 || somenteNumeros.length() == 13)) {
-            throw new ValidacaoException("ISBN deve possuir 10 ou 13 dígitos.");
+            throw new ValidacaoException("ISBN deve possuir 10 ou 13 digitos.");
         }
         this.isbn = somenteNumeros;
     }
 
-    public Autor getAutor() {
-        return autor;
+    public String getNomeAutor() {
+        return nomeAutor;
     }
 
-    public void setAutor(Autor autor) throws ValidacaoException {
-        if (autor == null) {
-            throw new ValidacaoException("Autor é obrigatório para livros.");
+    public void setNomeAutor(String nomeAutor) throws ValidacaoException {
+        if (nomeAutor == null || nomeAutor.trim().length() < 3) {
+            throw new ValidacaoException("Nome do autor deve possuir pelo menos 3 caracteres.");
         }
-        this.autor = autor;
-    }
-
-    public String getEditora() {
-        return editora;
-    }
-
-    public void setEditora(String editora) throws ValidacaoException {
-        if (editora == null || editora.trim().length() < 2) {
-            throw new ValidacaoException("Editora deve possuir pelo menos 2 caracteres.");
-        }
-        this.editora = editora.trim();
+        this.nomeAutor = nomeAutor.trim();
     }
 
     @Override
@@ -65,6 +52,7 @@ public class Livro extends ItemAcervo {
 
     @Override
     public String toString() {
-        return dadosResumidos() + String.format(" | ISBN: %s | Autor: %s | Editora: %s | Renovações permitidas: %d", isbn, autor, editora, getMaximoRenovacoes());
+        return dadosResumidos() + String.format(" | ISBN: %s | Autor: %s | Renovacoes permitidas: %d", isbn, nomeAutor,
+                getMaximoRenovacoes());
     }
 }

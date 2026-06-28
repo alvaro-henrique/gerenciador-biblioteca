@@ -14,7 +14,6 @@ import br.com.biblioteca.exception.BibliotecaException;
 import br.com.biblioteca.exception.PersistenciaException;
 import br.com.biblioteca.exception.ValidacaoException;
 import br.com.biblioteca.model.Aluno;
-import br.com.biblioteca.model.Autor;
 import br.com.biblioteca.model.Categoria;
 import br.com.biblioteca.model.Emprestimo;
 import br.com.biblioteca.model.EstadoEmprestimo;
@@ -128,10 +127,7 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
             obj.put("categoriaDescricao", livro.getCategoria().getDescricao());
             obj.put("disponivel", livro.isDisponivel());
             obj.put("isbn", livro.getIsbn());
-            obj.put("autorId", livro.getAutor().getId());
-            obj.put("autorNome", livro.getAutor().getNome());
-            obj.put("autorNacionalidade", livro.getAutor().getNacionalidade());
-            obj.put("editora", livro.getEditora());
+            obj.put("autorNome", livro.getNomeAutor());
             objetos.add(obj);
         }
         JsonUtil.escreverObjetos(pastaDados.resolve("livros.json"), objetos);
@@ -244,11 +240,10 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
         for (Map<String, String> obj : JsonUtil.lerObjetos(pastaDados.resolve("livros.json"))) {
             try {
                 Categoria categoria = new Categoria(intValue(obj, "categoriaId"), obj.get("categoriaNome"), obj.get("categoriaDescricao"));
-                Autor autor = new Autor(intValue(obj, "autorId"), obj.get("autorNome"), obj.get("autorNacionalidade"));
                 Livro livro = new Livro(intValue(obj, "id"), obj.get("titulo"), intValue(obj, "anoPublicacao"), categoria, obj.get("isbn"),
-                        autor, obj.get("editora"));
+                        obj.get("autorNome"));
                 livro.definirDisponibilidade(boolValue(obj, "disponivel"));
-                biblioteca.adicionarItemCarregado(livro, autor.getId(), categoria.getId());
+                biblioteca.adicionarItemCarregado(livro, 0, categoria.getId());
             } catch (ValidacaoException e) {
                 throw new PersistenciaException("Erro ao carregar livro.", e);
             }
