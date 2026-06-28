@@ -1,3 +1,7 @@
 [
-  {"id": 1, "titulo": "Java: Como Programar", "anoPublicacao": 2016, "categoriaId": 4, "categoriaNome": "Programacao", "categoriaDescricao": "Livros sobre desenvolvimento de software e linguagem Java", "disponivel": true, "isbn": "9788543004792", "autorNome": "Paul Deitel"}
+  {"id": 1, "titulo": "Java: Como Programar", "anoPublicacao": 2016, "categoriaId": 4, "categoriaNome": "Programacao", "categoriaDescricao": "Livros sobre desenvolvimento de software e linguagem Java", "disponivel": false, "isbn": "9788543004792", "autorNome": "Paul Deitel"},
+  {"id": 3, "titulo": "Estruturas de Dados e Algoritmos em Java", "anoPublicacao": 2014, "categoriaId": 6, "categoriaNome": "Computacao", "categoriaDescricao": "Livros sobre algoritmos e estruturas de dados", "disponivel": false, "isbn": "9788543004793", "autorNome": "Michael T. Goodrich"},
+  {"id": 4, "titulo": "Padroes de Projeto", "anoPublicacao": 2000, "categoriaId": 7, "categoriaNome": "Engenharia de Software", "categoriaDescricao": "Livros sobre arquitetura e padroes de software", "disponivel": false, "isbn": "9788573076103", "autorNome": "Erich Gamma"},
+  {"id": 5, "titulo": "Banco de Dados", "anoPublicacao": 2011, "categoriaId": 8, "categoriaNome": "Banco de Dados", "categoriaDescricao": "Livros sobre modelagem e administracao de bancos de dados", "disponivel": false, "isbn": "9788576059233", "autorNome": "Carlos Alberto Heuser"},
+  {"id": 6, "titulo": "Redes de Computadores", "anoPublicacao": 2015, "categoriaId": 9, "categoriaNome": "Infraestrutura", "categoriaDescricao": "Livros sobre redes, protocolos e infraestrutura computacional", "disponivel": false, "isbn": "9788543005676", "autorNome": "Andrew S. Tanenbaum"}
 ]

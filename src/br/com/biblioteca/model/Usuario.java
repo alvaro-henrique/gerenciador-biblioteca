@@ -52,7 +52,14 @@ public abstract class Usuario extends Pessoa {
 
     public abstract int getDiasEmprestimo();
 
-    public abstract double calcularMulta(int diasAtraso);
+    public abstract double getValorMultaPorDiaAtraso();
+
+    public double calcularMulta(int diasAtraso) {
+        if (diasAtraso <= 0) {
+            return 0;
+        }
+        return diasAtraso * getValorMultaPorDiaAtraso();
+    }
 
     public String dadosResumidos() {
         return String.format("[%d] %s - %s - %s - %s", getId(), getTipo(), getNome(), email, ativo ? "ATIVO" : "INATIVO");

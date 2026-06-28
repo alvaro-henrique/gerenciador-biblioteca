@@ -45,8 +45,8 @@ public class Professor extends Usuario {
     }
 
     @Override
-    public double calcularMulta(int diasAtraso) {
-        return Math.max(0, diasAtraso) * 0.50;
+    public double getValorMultaPorDiaAtraso() {
+        return 1.0;
     }
 
     @Override

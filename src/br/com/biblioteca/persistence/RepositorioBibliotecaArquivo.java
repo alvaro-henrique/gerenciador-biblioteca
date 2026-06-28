@@ -194,9 +194,8 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
             obj.put("id", multa.getId());
             obj.put("usuarioId", multa.getUsuario().getId());
             obj.put("emprestimoId", multa.getEmprestimo().getId());
-            obj.put("dataGeracao", multa.getDataGeracao().toString());
-            obj.put("diasAtraso", multa.getDiasAtraso());
             obj.put("valor", multa.getValor());
+            obj.put("dataGeracao", multa.getDataGeracao().toString());
             obj.put("paga", multa.isPaga());
             obj.put("dataPagamento", multa.getDataPagamento() == null ? null : multa.getDataPagamento().toString());
             objetos.add(obj);
@@ -294,15 +293,15 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
 
     private void carregarMultas(Biblioteca biblioteca) throws IOException, BibliotecaException {
         for (Map<String, String> obj : JsonUtil.lerObjetos(pastaDados.resolve("multas.json"))) {
+            LocalDate dataPagamento = obj.get("dataPagamento") == null ? null : LocalDate.parse(obj.get("dataPagamento"));
             Multa multa = new Multa(
                     intValue(obj, "id"),
                     biblioteca.buscarUsuario(intValue(obj, "usuarioId")),
                     biblioteca.buscarEmprestimo(intValue(obj, "emprestimoId")),
-                    LocalDate.parse(obj.get("dataGeracao")),
-                    intValue(obj, "diasAtraso"),
                     doubleValue(obj, "valor"),
+                    LocalDate.parse(obj.get("dataGeracao")),
                     boolValue(obj, "paga"),
-                    obj.get("dataPagamento") == null ? null : LocalDate.parse(obj.get("dataPagamento")));
+                    dataPagamento);
             biblioteca.adicionarMultaCarregada(multa);
         }
     }
@@ -311,11 +310,11 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
         return Integer.parseInt(obj.get(chave));
     }
 
-    private double doubleValue(Map<String, String> obj, String chave) {
-        return Double.parseDouble(obj.get(chave));
-    }
-
     private boolean boolValue(Map<String, String> obj, String chave) {
         return Boolean.parseBoolean(obj.get(chave));
+    }
+
+    private double doubleValue(Map<String, String> obj, String chave) {
+        return Double.parseDouble(obj.get(chave));
     }
 }

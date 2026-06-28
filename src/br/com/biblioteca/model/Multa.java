@@ -2,21 +2,18 @@ package br.com.biblioteca.model;
 
 import java.time.LocalDate;
 
-import br.com.biblioteca.exception.OperacaoInvalidaException;
 import br.com.biblioteca.exception.ValidacaoException;
 
 public class Multa {
     private final int id;
     private final Usuario usuario;
     private final Emprestimo emprestimo;
-    private final LocalDate dataGeracao;
-    private final int diasAtraso;
     private final double valor;
+    private final LocalDate dataGeracao;
     private boolean paga;
     private LocalDate dataPagamento;
 
-    public Multa(int id, Usuario usuario, Emprestimo emprestimo, LocalDate dataGeracao, int diasAtraso, double valor)
-            throws ValidacaoException {
+    public Multa(int id, Usuario usuario, Emprestimo emprestimo, double valor, LocalDate dataGeracao) throws ValidacaoException {
         if (id <= 0) {
             throw new ValidacaoException("ID da multa deve ser maior que zero.");
         }
@@ -26,27 +23,23 @@ public class Multa {
         if (emprestimo == null) {
             throw new ValidacaoException("Emprestimo da multa e obrigatorio.");
         }
-        if (dataGeracao == null) {
-            throw new ValidacaoException("Data de geracao da multa e obrigatoria.");
-        }
-        if (diasAtraso <= 0) {
-            throw new ValidacaoException("Dias de atraso da multa devem ser maiores que zero.");
-        }
         if (valor <= 0) {
             throw new ValidacaoException("Valor da multa deve ser maior que zero.");
+        }
+        if (dataGeracao == null) {
+            throw new ValidacaoException("Data de geracao da multa e obrigatoria.");
         }
         this.id = id;
         this.usuario = usuario;
         this.emprestimo = emprestimo;
-        this.dataGeracao = dataGeracao;
-        this.diasAtraso = diasAtraso;
         this.valor = valor;
+        this.dataGeracao = dataGeracao;
         this.paga = false;
     }
 
-    public Multa(int id, Usuario usuario, Emprestimo emprestimo, LocalDate dataGeracao, int diasAtraso, double valor,
-            boolean paga, LocalDate dataPagamento) throws ValidacaoException {
-        this(id, usuario, emprestimo, dataGeracao, diasAtraso, valor);
+    public Multa(int id, Usuario usuario, Emprestimo emprestimo, double valor, LocalDate dataGeracao, boolean paga,
+            LocalDate dataPagamento) throws ValidacaoException {
+        this(id, usuario, emprestimo, valor, dataGeracao);
         this.paga = paga;
         this.dataPagamento = dataPagamento;
     }
@@ -63,16 +56,12 @@ public class Multa {
         return emprestimo;
     }
 
-    public LocalDate getDataGeracao() {
-        return dataGeracao;
-    }
-
-    public int getDiasAtraso() {
-        return diasAtraso;
-    }
-
     public double getValor() {
         return valor;
+    }
+
+    public LocalDate getDataGeracao() {
+        return dataGeracao;
     }
 
     public boolean isPaga() {
@@ -87,12 +76,12 @@ public class Multa {
         return !paga;
     }
 
-    public void registrarPagamento(LocalDate dataPagamento) throws OperacaoInvalidaException {
+    public void pagar(LocalDate dataPagamento) throws ValidacaoException {
         if (paga) {
-            throw new OperacaoInvalidaException("Esta multa ja foi paga.");
+            throw new ValidacaoException("Esta multa ja foi paga.");
         }
         if (dataPagamento == null || dataPagamento.isBefore(dataGeracao)) {
-            throw new OperacaoInvalidaException("Data de pagamento da multa invalida.");
+            throw new ValidacaoException("Data de pagamento da multa e invalida.");
         }
         this.paga = true;
         this.dataPagamento = dataPagamento;
@@ -100,12 +89,12 @@ public class Multa {
 
     @Override
     public String toString() {
-        return String.format("[%d] multa do usuario %s | emprestimo: %d | dias: %d | valor: R$ %.2f | status: %s | pagamento: %s",
+        return String.format("[%d] usuario: %s | emprestimo: %d | valor: R$ %.2f | gerada em: %s | status: %s | pagamento: %s",
                 id,
                 usuario.getNome(),
                 emprestimo.getId(),
-                diasAtraso,
                 valor,
+                dataGeracao,
                 paga ? "PAGA" : "PENDENTE",
                 dataPagamento == null ? "-" : dataPagamento);
     }

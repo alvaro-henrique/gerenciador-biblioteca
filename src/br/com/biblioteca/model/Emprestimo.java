@@ -2,7 +2,6 @@ package br.com.biblioteca.model;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-
 import br.com.biblioteca.exception.TransicaoEstadoInvalidaException;
 import br.com.biblioteca.exception.ValidacaoException;
 
@@ -103,7 +102,7 @@ public class Emprestimo {
         dataPrevistaDevolucao = dataPrevistaDevolucao.plusDays(usuario.getDiasEmprestimo());
     }
 
-    public double devolver(LocalDate dataDevolucao) throws TransicaoEstadoInvalidaException {
+    public void devolver(LocalDate dataDevolucao) throws TransicaoEstadoInvalidaException {
         atualizarEstadoPorData(dataDevolucao);
         if (estado != EstadoEmprestimo.ATIVO && estado != EstadoEmprestimo.ATRASADO) {
             throw new TransicaoEstadoInvalidaException("Somente emprestimos ativos ou atrasados podem ser devolvidos.");
@@ -114,7 +113,17 @@ public class Emprestimo {
         this.dataDevolucao = dataDevolucao;
         estado = EstadoEmprestimo.DEVOLVIDO;
         item.devolver();
-        return calcularMulta(dataDevolucao);
+    }
+
+    public int calcularDiasAtraso(LocalDate dataReferencia) {
+        if (dataReferencia == null || !dataReferencia.isAfter(dataPrevistaDevolucao)) {
+            return 0;
+        }
+        return (int) ChronoUnit.DAYS.between(dataPrevistaDevolucao, dataReferencia);
+    }
+
+    public double calcularMulta(LocalDate dataReferencia) {
+        return usuario.calcularMulta(calcularDiasAtraso(dataReferencia));
     }
 
     public void cancelar() throws TransicaoEstadoInvalidaException {
@@ -129,18 +138,9 @@ public class Emprestimo {
         return estado == EstadoEmprestimo.ATIVO || estado == EstadoEmprestimo.ATRASADO;
     }
 
-    public int calcularDiasAtraso(LocalDate hoje) {
-        long diasAtraso = ChronoUnit.DAYS.between(dataPrevistaDevolucao, hoje);
-        return (int) Math.max(0, diasAtraso);
-    }
-
-    public double calcularMulta(LocalDate hoje) {
-        return usuario.calcularMulta(calcularDiasAtraso(hoje));
-    }
-
     @Override
     public String toString() {
-        return String.format("[%d] %s pegou '%s' | emprestimo: %s | previsao: %s | devolucao: %s | estado: %s | renovacoes: %d | multa hoje: R$ %.2f",
+        return String.format("[%d] %s pegou '%s' | emprestimo: %s | previsao: %s | devolucao: %s | estado: %s | renovacoes: %d",
                 id,
                 usuario.getNome(),
                 item.getTitulo(),
@@ -148,7 +148,6 @@ public class Emprestimo {
                 dataPrevistaDevolucao,
                 dataDevolucao == null ? "-" : dataDevolucao,
                 estado,
-                renovacoes,
-                calcularMulta(LocalDate.now()));
+                renovacoes);
     }
 }

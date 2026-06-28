@@ -167,11 +167,11 @@ public class Biblioteca {
         if (contarEmprestimosEmAberto(id) > 0) {
             throw new OperacaoInvalidaException("Usuario possui emprestimo em aberto e nao pode ser excluido.");
         }
-        if (reservas.stream().anyMatch(r -> r.estaAtiva() && r.getUsuario().getId() == id)) {
-            throw new OperacaoInvalidaException("Usuario possui reserva ativa e nao pode ser excluido.");
-        }
         if (possuiMultaPendente(id)) {
             throw new OperacaoInvalidaException("Usuario possui multa pendente e nao pode ser excluido.");
+        }
+        if (reservas.stream().anyMatch(r -> r.estaAtiva() && r.getUsuario().getId() == id)) {
+            throw new OperacaoInvalidaException("Usuario possui reserva ativa e nao pode ser excluido.");
         }
         usuarios.remove(id);
     }
@@ -197,20 +197,23 @@ public class Biblioteca {
         Usuario usuario = buscarUsuario(usuarioId);
         ItemAcervo item = buscarItem(itemId);
 
+        if (!(item instanceof Livro)) {
+            throw new OperacaoInvalidaException("Apenas livros podem ser emprestados.");
+        }
         if (!usuario.isAtivo()) {
             throw new OperacaoInvalidaException("Usuario esta inativo e nao pode realizar emprestimos.");
-        }
-        if (possuiMultaPendente(usuarioId)) {
-            throw new MultaPendenteException("Usuario com multa pendente nao pode realizar emprestimos.");
         }
         if (!item.isDisponivel()) {
             throw new LivroIndisponivelException("Livro indisponivel para emprestimo.");
         }
+        if (possuiMultaPendente(usuarioId)) {
+            throw new MultaPendenteException("Usuario possui multa pendente e nao pode realizar novos emprestimos.");
+        }
         if (possuiEmprestimoAtrasado(usuarioId)) {
-            throw new MultaPendenteException("Usuario possui emprestimo atrasado e nao pode retirar novos livros.");
+            throw new OperacaoInvalidaException("Usuario possui emprestimo atrasado e nao pode retirar novos livros.");
         }
         if (contarEmprestimosEmAberto(usuarioId) >= usuario.getLimiteEmprestimos()) {
-            throw new LimiteEmprestimosException("Usuario atingiu o limite de emprestimos para o seu perfil.");
+            throw new LimiteEmprestimosException("Usuario atingiu o limite de " + usuario.getLimiteEmprestimos() + " livros emprestados.");
         }
 
         Reserva reservaPrioritaria = buscarReservaAtivaMaisAntiga(itemId);
@@ -230,15 +233,19 @@ public class Biblioteca {
         return emprestimo;
     }
 
-    public double devolverEmprestimo(int emprestimoId) throws BibliotecaException {
+    public Multa devolverEmprestimo(int emprestimoId) throws BibliotecaException {
         Emprestimo emprestimo = buscarEmprestimo(emprestimoId);
-        double valorMulta = emprestimo.devolver(LocalDate.now());
-        int diasAtraso = emprestimo.calcularDiasAtraso(emprestimo.getDataDevolucao());
-        if (valorMulta > 0) {
-            Multa multa = new Multa(proximaMultaId++, emprestimo.getUsuario(), emprestimo, LocalDate.now(), diasAtraso, valorMulta);
-            multas.add(multa);
+        LocalDate hoje = LocalDate.now();
+        double valorMulta = emprestimo.calcularMulta(hoje);
+        emprestimo.devolver(hoje);
+
+        if (valorMulta <= 0 || buscarMultaPorEmprestimo(emprestimo.getId()) != null) {
+            return null;
         }
-        return valorMulta;
+
+        Multa multa = new Multa(proximaMultaId++, emprestimo.getUsuario(), emprestimo, valorMulta, hoje);
+        multas.add(multa);
+        return multa;
     }
 
     public void renovarEmprestimo(int emprestimoId) throws BibliotecaException {
@@ -293,10 +300,6 @@ public class Biblioteca {
         buscarReserva(reservaId).cancelar();
     }
 
-    public void pagarMulta(int multaId) throws BibliotecaException {
-        buscarMulta(multaId).registrarPagamento(LocalDate.now());
-    }
-
     public Usuario buscarUsuario(int id) throws UsuarioNaoEncontradoException {
         Usuario usuario = usuarios.get(id);
         if (usuario == null) {
@@ -335,13 +338,6 @@ public class Biblioteca {
                 .orElseThrow(() -> new EntidadeNaoEncontradaException("Reserva nao encontrada."));
     }
 
-    public Multa buscarMulta(int id) throws EntidadeNaoEncontradaException {
-        return multas.stream()
-                .filter(m -> m.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new EntidadeNaoEncontradaException("Multa nao encontrada."));
-    }
-
     public Collection<Usuario> listarUsuarios() {
         return usuarios.values();
     }
@@ -357,6 +353,35 @@ public class Biblioteca {
     public List<Emprestimo> listarEmprestimos() {
         atualizarEstadosEmprestimos();
         return emprestimos;
+    }
+
+    public List<Emprestimo> listarEmprestimosEmAberto() {
+        atualizarEstadosEmprestimos();
+        List<Emprestimo> emprestimosEmAberto = new ArrayList<>();
+        for (Emprestimo emprestimo : emprestimos) {
+            if (emprestimo.estaEmAberto()) {
+                emprestimosEmAberto.add(emprestimo);
+            }
+        }
+        return emprestimosEmAberto;
+    }
+
+    public int getLimiteMaximoEmprestimosPorUsuario() {
+        return 3;
+    }
+
+    public int getLimiteEmprestimosDoUsuario(int usuarioId) throws BibliotecaException {
+        return buscarUsuario(usuarioId).getLimiteEmprestimos();
+    }
+
+    public boolean usuarioPossuiMultaPendente(int usuarioId) throws BibliotecaException {
+        buscarUsuario(usuarioId);
+        return possuiMultaPendente(usuarioId);
+    }
+
+    public long contarEmprestimosEmAbertoDoUsuario(int usuarioId) throws BibliotecaException {
+        buscarUsuario(usuarioId);
+        return contarEmprestimosEmAberto(usuarioId);
     }
 
     public List<Reserva> listarReservas() {
@@ -422,6 +447,21 @@ public class Biblioteca {
         proximaMultaId = Math.max(proximaMultaId, multa.getId() + 1);
     }
 
+    public Multa buscarMulta(int id) throws EntidadeNaoEncontradaException {
+        return multas.stream()
+                .filter(m -> m.getId() == id)
+                .findFirst()
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Multa nao encontrada."));
+    }
+
+    public void pagarMulta(int multaId) throws BibliotecaException {
+        Multa multa = buscarMulta(multaId);
+        if (!multa.estaPendente()) {
+            throw new OperacaoInvalidaException("A multa informada ja foi paga.");
+        }
+        multa.pagar(LocalDate.now());
+    }
+
     public void limparTudo() {
         usuarios.clear();
         funcionarios.clear();
@@ -481,7 +521,8 @@ public class Biblioteca {
     }
 
     private boolean possuiMultaPendente(int usuarioId) {
-        return multas.stream().anyMatch(m -> m.getUsuario().getId() == usuarioId && m.estaPendente());
+        return multas.stream()
+                .anyMatch(m -> m.getUsuario().getId() == usuarioId && m.estaPendente());
     }
 
     private long contarEmprestimosEmAberto(int usuarioId) {
@@ -494,6 +535,13 @@ public class Biblioteca {
         return reservas.stream()
                 .filter(r -> r.estaAtiva() && r.getItem().getId() == itemId)
                 .min(Comparator.comparing(Reserva::getDataReserva).thenComparing(Reserva::getId))
+                .orElse(null);
+    }
+
+    private Multa buscarMultaPorEmprestimo(int emprestimoId) {
+        return multas.stream()
+                .filter(m -> m.getEmprestimo().getId() == emprestimoId)
+                .findFirst()
                 .orElse(null);
     }
 }
