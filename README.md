@@ -70,7 +70,6 @@ gestao-biblioteca-poo/
 │     ├─ persistence/
 │     └─ service/
 ├─ diagrama-classes.puml
-├─ componentes.txt
 ├─ run.bat
 ├─ run.sh
 └─ README.md
