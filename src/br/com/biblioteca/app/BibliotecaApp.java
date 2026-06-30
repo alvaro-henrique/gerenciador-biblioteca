@@ -180,7 +180,7 @@ public class BibliotecaApp {
     private void cadastrarUsuario() throws BibliotecaException {
         System.out.println("\n1 - Aluno");
         System.out.println("2 - Professor");
-        int tipo = lerInteiro("Tipo de usuario: ");
+        int tipo = lerTipoUsuarioValido();
         String nome = lerTexto("Nome: ");
         String cpf = lerCpfValido();
         String email = lerEmailValido();
@@ -197,6 +197,16 @@ public class BibliotecaApp {
             System.out.println("Professor cadastrado: " + professor);
         } else {
             System.out.println("Tipo invalido.");
+        }
+    }
+
+    private int lerTipoUsuarioValido() {
+        while (true) {
+            int tipo = lerInteiro("Tipo de usuario: ");
+            if (tipo == 1 || tipo == 2) {
+                return tipo;
+            }
+            System.out.println("Opcao invalida. Digite 1 para Aluno ou 2 para Professor.");
         }
     }
 
