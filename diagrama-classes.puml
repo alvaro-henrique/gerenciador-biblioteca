@@ -24,12 +24,14 @@ class Biblioteca {
   +cadastrarProfessor(...): Professor
   +cadastrarFuncionario(...): Funcionario
   +cadastrarLivro(...): Livro
+  +cadastrarRevista(...): Revista
   +registrarEmprestimo(usuarioId: int, itemId: int): Emprestimo
-  +devolverEmprestimo(emprestimoId: int): double
+  +devolverEmprestimo(emprestimoId: int): Multa
   +renovarEmprestimo(emprestimoId: int): void
   +cancelarEmprestimo(emprestimoId: int): void
   +reservarItem(usuarioId: int, itemId: int): Reserva
   +atenderReserva(reservaId: int): Emprestimo
+  +listarMultas(): List<Multa>
   +pagarMulta(multaId: int): void
 }
 
@@ -66,7 +68,6 @@ class Funcionario {
   -ativo: boolean
 }
 
-class Autor
 class Categoria
 
 abstract class ItemAcervo {
@@ -81,8 +82,7 @@ abstract class ItemAcervo {
 
 class Livro {
   -isbn: String
-  -autor: Autor
-  -editora: String
+  -nomeAutor: String
 }
 
 class Revista {
@@ -98,6 +98,7 @@ class Emprestimo {
   -dataEmprestimo: LocalDate
   -dataPrevistaDevolucao: LocalDate
   -dataDevolucao: LocalDate
+  -dataUltimaRenovacao: LocalDate
   -estado: EstadoEmprestimo
   -renovacoes: int
 }
@@ -115,7 +116,6 @@ class Multa {
   -usuario: Usuario
   -emprestimo: Emprestimo
   -dataGeracao: LocalDate
-  -diasAtraso: int
   -valor: double
   -paga: boolean
   -dataPagamento: LocalDate
@@ -176,7 +176,6 @@ Biblioteca "1" o-- "0..*" Emprestimo
 Biblioteca "1" o-- "0..*" Reserva
 Biblioteca "1" o-- "0..*" Multa
 
-Livro --> Autor
 ItemAcervo --> Categoria
 Emprestimo --> Usuario
 Emprestimo --> ItemAcervo

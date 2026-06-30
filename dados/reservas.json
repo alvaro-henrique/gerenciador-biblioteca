@@ -1,2 +1,4 @@
 [
+  {"id": 1, "usuarioId": 2, "itemId": 5, "dataReserva": "2026-06-29", "estado": "ATENDIDA"},
+  {"id": 2, "usuarioId": 3, "itemId": 5, "dataReserva": "2026-06-29", "estado": "CANCELADA"}
 ]

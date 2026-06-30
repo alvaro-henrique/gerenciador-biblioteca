@@ -12,6 +12,7 @@ public class Emprestimo {
     private final LocalDate dataEmprestimo;
     private LocalDate dataPrevistaDevolucao;
     private LocalDate dataDevolucao;
+    private LocalDate dataUltimaRenovacao;
     private EstadoEmprestimo estado;
     private int renovacoes;
 
@@ -34,14 +35,21 @@ public class Emprestimo {
         this.item = item;
         this.dataEmprestimo = dataEmprestimo;
         this.dataPrevistaDevolucao = dataPrevistaDevolucao;
+        this.dataUltimaRenovacao = null;
         this.estado = EstadoEmprestimo.ATIVO;
         this.renovacoes = 0;
     }
 
     public Emprestimo(int id, Usuario usuario, ItemAcervo item, LocalDate dataEmprestimo, LocalDate dataPrevistaDevolucao,
             LocalDate dataDevolucao, EstadoEmprestimo estado, int renovacoes) throws ValidacaoException {
+        this(id, usuario, item, dataEmprestimo, dataPrevistaDevolucao, dataDevolucao, estado, renovacoes, null);
+    }
+
+    public Emprestimo(int id, Usuario usuario, ItemAcervo item, LocalDate dataEmprestimo, LocalDate dataPrevistaDevolucao,
+            LocalDate dataDevolucao, EstadoEmprestimo estado, int renovacoes, LocalDate dataUltimaRenovacao) throws ValidacaoException {
         this(id, usuario, item, dataEmprestimo, dataPrevistaDevolucao);
         this.dataDevolucao = dataDevolucao;
+        this.dataUltimaRenovacao = dataUltimaRenovacao;
         this.estado = estado;
         this.renovacoes = renovacoes;
         if (estado == EstadoEmprestimo.ATIVO || estado == EstadoEmprestimo.ATRASADO) {
@@ -73,6 +81,10 @@ public class Emprestimo {
         return dataDevolucao;
     }
 
+    public LocalDate getDataUltimaRenovacao() {
+        return dataUltimaRenovacao;
+    }
+
     public EstadoEmprestimo getEstado() {
         return estado;
     }
@@ -99,6 +111,7 @@ public class Emprestimo {
             throw new TransicaoEstadoInvalidaException("Limite de renovacoes atingido para este item.");
         }
         renovacoes++;
+        dataUltimaRenovacao = hoje;
         dataPrevistaDevolucao = dataPrevistaDevolucao.plusDays(usuario.getDiasEmprestimo());
     }
 

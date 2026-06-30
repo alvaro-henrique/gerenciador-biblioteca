@@ -166,6 +166,8 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
             obj.put("dataEmprestimo", emprestimo.getDataEmprestimo().toString());
             obj.put("dataPrevistaDevolucao", emprestimo.getDataPrevistaDevolucao().toString());
             obj.put("dataDevolucao", emprestimo.getDataDevolucao() == null ? null : emprestimo.getDataDevolucao().toString());
+            obj.put("dataUltimaRenovacao",
+                    emprestimo.getDataUltimaRenovacao() == null ? null : emprestimo.getDataUltimaRenovacao().toString());
             obj.put("estado", emprestimo.getEstado().name());
             obj.put("renovacoes", emprestimo.getRenovacoes());
             objetos.add(obj);
@@ -242,7 +244,7 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
                 Livro livro = new Livro(intValue(obj, "id"), obj.get("titulo"), intValue(obj, "anoPublicacao"), categoria, obj.get("isbn"),
                         obj.get("autorNome"));
                 livro.definirDisponibilidade(boolValue(obj, "disponivel"));
-                biblioteca.adicionarItemCarregado(livro, 0, categoria.getId());
+                biblioteca.adicionarItemCarregado(livro, categoria.getId());
             } catch (ValidacaoException e) {
                 throw new PersistenciaException("Erro ao carregar livro.", e);
             }
@@ -256,7 +258,7 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
                 Revista revista = new Revista(intValue(obj, "id"), obj.get("titulo"), intValue(obj, "anoPublicacao"), categoria,
                         obj.get("issn"), intValue(obj, "numeroEdicao"), obj.get("periodicidade"));
                 revista.definirDisponibilidade(boolValue(obj, "disponivel"));
-                biblioteca.adicionarItemCarregado(revista, 0, categoria.getId());
+                biblioteca.adicionarItemCarregado(revista, categoria.getId());
             } catch (ValidacaoException e) {
                 throw new PersistenciaException("Erro ao carregar revista.", e);
             }
@@ -266,6 +268,7 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
     private void carregarEmprestimos(Biblioteca biblioteca) throws IOException, BibliotecaException {
         for (Map<String, String> obj : JsonUtil.lerObjetos(pastaDados.resolve("emprestimos.json"))) {
             LocalDate dataDevolucao = obj.get("dataDevolucao") == null ? null : LocalDate.parse(obj.get("dataDevolucao"));
+            LocalDate dataUltimaRenovacao = obj.get("dataUltimaRenovacao") == null ? null : LocalDate.parse(obj.get("dataUltimaRenovacao"));
             Emprestimo emprestimo = new Emprestimo(
                     intValue(obj, "id"),
                     biblioteca.buscarUsuario(intValue(obj, "usuarioId")),
@@ -274,7 +277,8 @@ public class RepositorioBibliotecaArquivo extends Persistencia {
                     LocalDate.parse(obj.get("dataPrevistaDevolucao")),
                     dataDevolucao,
                     EstadoEmprestimo.valueOf(obj.get("estado")),
-                    intValue(obj, "renovacoes"));
+                    intValue(obj, "renovacoes"),
+                    dataUltimaRenovacao);
             biblioteca.adicionarEmprestimoCarregado(emprestimo);
         }
     }

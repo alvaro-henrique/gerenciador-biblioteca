@@ -1,12 +1,15 @@
 package br.com.biblioteca.app;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import br.com.biblioteca.exception.BibliotecaException;
 import br.com.biblioteca.exception.EntidadeNaoEncontradaException;
+import br.com.biblioteca.exception.OperacaoInvalidaException;
 import br.com.biblioteca.exception.UsuarioNaoEncontradoException;
 import br.com.biblioteca.model.Aluno;
 import br.com.biblioteca.model.Emprestimo;
@@ -86,24 +89,27 @@ public class BibliotecaApp {
                         listarEmprestimos();
                         break;
                     case 18:
-                        reservarItem();
+                        listarLivrosEmprestadosPorUsuarioComRetorno();
                         break;
                     case 19:
-                        atenderReserva();
+                        reservarItem();
                         break;
                     case 20:
-                        cancelarReserva();
+                        atenderReserva();
                         break;
                     case 21:
-                        listarReservas();
+                        cancelarReserva();
                         break;
                     case 22:
-                        listarMultas();
+                        listarReservasComRetorno();
                         break;
                     case 23:
-                        pagarMulta();
+                        listarMultasComRetorno();
                         break;
                     case 24:
+                        pagarMulta();
+                        break;
+                    case 25:
                         inserirDadosExemplo();
                         break;
                     case 0:
@@ -142,13 +148,14 @@ public class BibliotecaApp {
         System.out.println("15 - Renovar emprestimo");
         System.out.println("16 - Cancelar emprestimo");
         System.out.println("17 - Listar livros emprestados");
-        System.out.println("18 - Reservar item emprestado");
-        System.out.println("19 - Atender reserva");
-        System.out.println("20 - Cancelar reserva");
-        System.out.println("21 - Listar reservas");
-        System.out.println("22 - Listar multas");
-        System.out.println("23 - Pagar multa");
-        System.out.println("24 - Inserir dados de exemplo");
+        System.out.println("18 - Listar livros emprestados por usuario");
+        System.out.println("19 - Reservar item emprestado");
+        System.out.println("20 - Atender reserva");
+        System.out.println("21 - Cancelar reserva");
+        System.out.println("22 - Listar reservas");
+        System.out.println("23 - Listar multas");
+        System.out.println("24 - Pagar multa");
+        System.out.println("25 - Inserir dados de exemplo");
         System.out.println("0  - Salvar e sair");
     }
 
@@ -211,6 +218,21 @@ public class BibliotecaApp {
         aguardarRetornoAoMenuPrincipal();
     }
 
+    private void listarLivrosEmprestadosPorUsuarioComRetorno() {
+        listarLivrosEmprestadosPorUsuario();
+        aguardarRetornoAoMenuPrincipal();
+    }
+
+    private void listarReservasComRetorno() {
+        listarReservas();
+        aguardarRetornoAoMenuPrincipal();
+    }
+
+    private void listarMultasComRetorno() {
+        listarMultas();
+        aguardarRetornoAoMenuPrincipal();
+    }
+
     private void listarUsuarios() {
         Collection<Usuario> usuarios = biblioteca.listarUsuarios();
         if (usuarios.isEmpty()) {
@@ -268,6 +290,33 @@ public class BibliotecaApp {
                 System.out.println();
             }
             exibirGrupoProfessoresParaEmprestimo(professores);
+        }
+    }
+
+    private void listarUsuariosParaReserva() {
+        Collection<Usuario> usuarios = biblioteca.listarUsuarios();
+        if (usuarios.isEmpty()) {
+            System.out.println("Nenhum usuario cadastrado.");
+            return;
+        }
+
+        System.out.println("Selecione o usuario para realizar a reserva:");
+        for (Usuario usuario : usuarios) {
+            if (usuario instanceof Aluno) {
+                Aluno aluno = (Aluno) usuario;
+                System.out.printf("[%d] %s | Matricula: %s | Curso: %s%n",
+                        aluno.getId(),
+                        aluno.getNome(),
+                        aluno.getMatricula(),
+                        aluno.getCurso());
+            } else if (usuario instanceof Professor) {
+                Professor professor = (Professor) usuario;
+                System.out.printf("[%d] %s | SIAPE: %s | Departamento: %s%n",
+                        professor.getId(),
+                        professor.getNome(),
+                        professor.getSiape(),
+                        professor.getDepartamento());
+            }
         }
     }
 
@@ -652,7 +701,7 @@ public class BibliotecaApp {
         }
         Emprestimo emprestimo = biblioteca.registrarEmprestimo(usuarioId, itemId);
         salvarDados();
-        System.out.println("Emprestimo registrado: " + emprestimo);
+        System.out.println("Emprestimo registrado: " + formatarResumoEmprestimo(emprestimo));
     }
 
     private Integer selecionarUsuarioParaEmprestimo() throws BibliotecaException {
@@ -726,6 +775,12 @@ public class BibliotecaApp {
         listarLivrosEmprestados();
         int id = lerInteiro("ID do emprestimo para renovar: ");
         biblioteca.renovarEmprestimo(id);
+        salvarDados();
+        Emprestimo emprestimo = biblioteca.buscarEmprestimo(id);
+        if (emprestimo.getDataUltimaRenovacao() != null) {
+            System.out.println("Emprestimo renovado com sucesso. Ultima renovacao: " + emprestimo.getDataUltimaRenovacao());
+            return;
+        }
         System.out.println("Emprestimo renovado com sucesso.");
     }
 
@@ -759,27 +814,196 @@ public class BibliotecaApp {
         }
     }
 
+    private boolean listarLivrosEmprestadosParaReserva() {
+        List<Emprestimo> emprestimos = biblioteca.listarEmprestimosEmAberto();
+        if (emprestimos.isEmpty()) {
+            System.out.println("Nenhum livro emprestado.");
+            return false;
+        }
+        System.out.println("=== LISTAGEM DE LIVROS EMPRESTADOS ===");
+        System.out.println("Selecione um livro emprestado para realizar a reserva:");
+        for (Emprestimo emprestimo : emprestimos) {
+            System.out.printf("[%d] livro: %s%n",
+                    emprestimo.getItem().getId(),
+                    emprestimo.getItem().getTitulo());
+        }
+        return true;
+    }
+
+    private void listarLivrosEmprestadosPorUsuario() {
+        limparTerminal();
+        List<Emprestimo> emprestimos = biblioteca.listarEmprestimosEmAberto();
+        if (emprestimos.isEmpty()) {
+            System.out.println("Nenhum livro emprestado.");
+            return;
+        }
+
+        Map<Integer, Usuario> usuariosComEmprestimos = new LinkedHashMap<>();
+        Map<Integer, List<Emprestimo>> emprestimosPorUsuario = new LinkedHashMap<>();
+
+        for (Emprestimo emprestimo : emprestimos) {
+            int usuarioId = emprestimo.getUsuario().getId();
+            usuariosComEmprestimos.putIfAbsent(usuarioId, emprestimo.getUsuario());
+            emprestimosPorUsuario.computeIfAbsent(usuarioId, chave -> new LinkedList<>()).add(emprestimo);
+        }
+
+        System.out.println("=== LISTAGEM DE LIVROS EMPRESTADOS POR USUARIO ===");
+        boolean primeiroGrupo = true;
+        for (Map.Entry<Integer, Usuario> entry : usuariosComEmprestimos.entrySet()) {
+            if (!primeiroGrupo) {
+                System.out.println();
+            }
+
+            Usuario usuario = entry.getValue();
+            System.out.printf("USUARIO: %s%n", usuario.getNome());
+
+            for (Emprestimo emprestimo : emprestimosPorUsuario.get(entry.getKey())) {
+                System.out.printf("- %s | emprestimo: %s | previsao: %s | renovacoes: %d%n",
+                        emprestimo.getItem().getTitulo(),
+                        emprestimo.getDataEmprestimo(),
+                        emprestimo.getDataPrevistaDevolucao(),
+                        emprestimo.getRenovacoes());
+            }
+
+            primeiroGrupo = false;
+        }
+    }
+
     private void reservarItem() throws BibliotecaException {
-        listarUsuarios();
-        int usuarioId = lerInteiro("ID do usuario: ");
-        listarItens();
-        int itemId = lerInteiro("ID do item emprestado: ");
+        Integer usuarioId = selecionarUsuarioParaReserva();
+        if (usuarioId == null) {
+            return;
+        }
+        Integer itemId = selecionarLivroEmprestadoParaReserva();
+        if (itemId == null) {
+            return;
+        }
         Reserva reserva = biblioteca.reservarItem(usuarioId, itemId);
+        salvarDados();
         System.out.println("Reserva registrada: " + reserva);
     }
 
+    private Integer selecionarUsuarioParaReserva() {
+        if (biblioteca.listarUsuarios().isEmpty()) {
+            System.out.println("Nenhum usuario cadastrado.");
+            return null;
+        }
+
+        while (true) {
+            listarUsuariosParaReserva();
+            int usuarioId = lerInteiro("ID do usuario: ");
+            try {
+                biblioteca.buscarUsuario(usuarioId);
+                return usuarioId;
+            } catch (UsuarioNaoEncontradoException e) {
+                System.out.println("ID invalido. Digite um ID de usuario existente.");
+                System.out.println();
+            }
+        }
+    }
+
+    private Integer selecionarLivroEmprestadoParaReserva() throws BibliotecaException {
+        if (!listarLivrosEmprestadosParaReserva()) {
+            return null;
+        }
+
+        while (true) {
+            int itemId = lerInteiro("ID do livro emprestado: ");
+            try {
+                ItemAcervo item = biblioteca.buscarItem(itemId);
+                if (!(item instanceof Livro) || item.isDisponivel()) {
+                    System.out.println("ID invalido. Digite um ID de livro emprestado.");
+                    System.out.println();
+                    continue;
+                }
+                return itemId;
+            } catch (EntidadeNaoEncontradaException e) {
+                System.out.println("ID invalido. Digite um ID de livro emprestado.");
+                System.out.println();
+            }
+        }
+    }
+
     private void atenderReserva() throws BibliotecaException {
-        listarReservas();
-        int id = lerInteiro("ID da reserva para atender: ");
-        Emprestimo emprestimo = biblioteca.atenderReserva(id);
-        System.out.println("Reserva atendida e emprestimo criado: " + emprestimo);
+        if (!listarReservasAtivasParaAtendimento()) {
+            return;
+        }
+        int id;
+        while (true) {
+            id = lerInteiro("ID da reserva para atender: ");
+            try {
+                Reserva reserva = biblioteca.buscarReserva(id);
+                if (!reserva.estaAtiva()) {
+                    System.out.println("ID invalido. Digite um ID de reserva ativa.");
+                    continue;
+                }
+                break;
+            } catch (EntidadeNaoEncontradaException e) {
+                System.out.println("ID invalido. Digite um ID de reserva ativa.");
+            }
+        }
+        try {
+            Emprestimo emprestimo = biblioteca.atenderReserva(id);
+            salvarDados();
+            System.out.println("Reserva atendida e emprestimo criado: " + emprestimo);
+            aguardarRetornoAoMenuPrincipal();
+        } catch (OperacaoInvalidaException e) {
+            if ("Reserva nao pode ser atendida porque o item ainda nao esta disponivel.".equals(e.getMessage())) {
+                System.out.println("Erro: " + e.getMessage());
+                aguardarRetornoAoMenuPrincipal();
+                return;
+            }
+            throw e;
+        }
+    }
+
+    private boolean listarReservasAtivasParaAtendimento() {
+        List<Reserva> reservas = biblioteca.listarReservas();
+        List<Reserva> reservasAtivas = new LinkedList<>();
+
+        for (Reserva reserva : reservas) {
+            if (reserva.estaAtiva()) {
+                reservasAtivas.add(reserva);
+            }
+        }
+
+        if (reservasAtivas.isEmpty()) {
+            System.out.println("Nenhuma reserva ativa registrada.");
+            return false;
+        }
+
+        System.out.println("=== LISTAGEM DE RESERVAS ATIVAS ===");
+        for (Reserva reserva : reservasAtivas) {
+            System.out.printf("[%d] %s reservou '%s' em %s%n",
+                    reserva.getId(),
+                    reserva.getUsuario().getNome(),
+                    reserva.getItem().getTitulo(),
+                    reserva.getDataReserva());
+        }
+        return true;
     }
 
     private void cancelarReserva() throws BibliotecaException {
+        if (biblioteca.listarReservas().isEmpty()) {
+            System.out.println("Nenhuma reserva registrada.");
+            return;
+        }
         listarReservas();
-        int id = lerInteiro("ID da reserva para cancelar: ");
+        System.out.println("Selecione uma reserva para cancelar:");
+        int id;
+        while (true) {
+            id = lerInteiro("ID da reserva para cancelar: ");
+            try {
+                biblioteca.buscarReserva(id);
+                break;
+            } catch (EntidadeNaoEncontradaException e) {
+                System.out.println("ID invalido. Digite um ID de reserva existente.");
+            }
+        }
         biblioteca.cancelarReserva(id);
+        salvarDados();
         System.out.println("Reserva cancelada com sucesso.");
+        aguardarRetornoAoMenuPrincipal();
     }
 
     private void listarReservas() {
@@ -788,7 +1012,67 @@ public class BibliotecaApp {
             System.out.println("Nenhuma reserva registrada.");
             return;
         }
-        reservas.forEach(System.out::println);
+
+        List<Reserva> reservasAtivas = new LinkedList<>();
+        List<Reserva> reservasAtendidas = new LinkedList<>();
+        List<Reserva> reservasCanceladas = new LinkedList<>();
+
+        for (Reserva reserva : reservas) {
+            switch (reserva.getEstado()) {
+                case ATIVA:
+                    reservasAtivas.add(reserva);
+                    break;
+                case ATENDIDA:
+                    reservasAtendidas.add(reserva);
+                    break;
+                case CANCELADA:
+                    reservasCanceladas.add(reserva);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        System.out.println("=== LISTAGEM DE RESERVAS ===");
+
+        if (!reservasAtivas.isEmpty()) {
+            System.out.println("RESERVAS ATIVAS");
+            for (Reserva reserva : reservasAtivas) {
+                System.out.printf("[%d] %s reservou '%s' em %s%n",
+                        reserva.getId(),
+                        reserva.getUsuario().getNome(),
+                        reserva.getItem().getTitulo(),
+                        reserva.getDataReserva());
+            }
+        }
+
+        if (!reservasAtendidas.isEmpty()) {
+            if (!reservasAtivas.isEmpty()) {
+                System.out.println();
+            }
+            System.out.println("RESERVAS ATENDIDAS");
+            for (Reserva reserva : reservasAtendidas) {
+                System.out.printf("[%d] %s reservou '%s' em %s%n",
+                        reserva.getId(),
+                        reserva.getUsuario().getNome(),
+                        reserva.getItem().getTitulo(),
+                        reserva.getDataReserva());
+            }
+        }
+
+        if (!reservasCanceladas.isEmpty()) {
+            if (!reservasAtivas.isEmpty() || !reservasAtendidas.isEmpty()) {
+                System.out.println();
+            }
+            System.out.println("RESERVAS CANCELADAS");
+            for (Reserva reserva : reservasCanceladas) {
+                System.out.printf("[%d] %s reservou '%s' em %s%n",
+                        reserva.getId(),
+                        reserva.getUsuario().getNome(),
+                        reserva.getItem().getTitulo(),
+                        reserva.getDataReserva());
+            }
+        }
     }
 
     private void listarMultas() {
@@ -797,8 +1081,32 @@ public class BibliotecaApp {
             System.out.println("Nenhuma multa registrada.");
             return;
         }
-        System.out.println("=== LISTAGEM DE MULTAS ===");
-        multas.forEach(System.out::println);
+
+        List<Multa> multasNaoPagas = new LinkedList<>();
+        List<Multa> multasPagas = new LinkedList<>();
+
+        for (Multa multa : multas) {
+            if (multa.estaPendente()) {
+                multasNaoPagas.add(multa);
+            } else {
+                multasPagas.add(multa);
+            }
+        }
+
+        System.out.println("=== Listagem De Multas ===");
+
+        if (!multasNaoPagas.isEmpty()) {
+            System.out.println("Multas Nao Pagas");
+            multasNaoPagas.forEach(System.out::println);
+        }
+
+        if (!multasPagas.isEmpty()) {
+            if (!multasNaoPagas.isEmpty()) {
+                System.out.println();
+            }
+            System.out.println("Multas Pagas");
+            multasPagas.forEach(System.out::println);
+        }
     }
 
     private void pagarMulta() throws BibliotecaException {
@@ -807,6 +1115,15 @@ public class BibliotecaApp {
         biblioteca.pagarMulta(multaId);
         salvarDados();
         System.out.println("Multa paga com sucesso.");
+    }
+
+    private String formatarResumoEmprestimo(Emprestimo emprestimo) {
+        return String.format("[%d] %s pegou %s | emprestimo: %s | previsao: %s",
+                emprestimo.getId(),
+                emprestimo.getUsuario().getNome(),
+                emprestimo.getItem().getTitulo(),
+                emprestimo.getDataEmprestimo(),
+                emprestimo.getDataPrevistaDevolucao());
     }
 
     private void inserirDadosExemplo() throws BibliotecaException {

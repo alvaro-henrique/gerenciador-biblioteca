@@ -164,6 +164,15 @@ public class Biblioteca {
 
     public void removerUsuario(int id) throws BibliotecaException {
         buscarUsuario(id);
+        if (emprestimos.stream().anyMatch(e -> e.getUsuario().getId() == id)) {
+            throw new OperacaoInvalidaException("Usuario possui historico de emprestimos e nao pode ser excluido.");
+        }
+        if (multas.stream().anyMatch(m -> m.getUsuario().getId() == id)) {
+            throw new OperacaoInvalidaException("Usuario possui historico de multas e nao pode ser excluido.");
+        }
+        if (reservas.stream().anyMatch(r -> r.getUsuario().getId() == id)) {
+            throw new OperacaoInvalidaException("Usuario possui historico de reservas e nao pode ser excluido.");
+        }
         if (contarEmprestimosEmAberto(id) > 0) {
             throw new OperacaoInvalidaException("Usuario possui emprestimo em aberto e nao pode ser excluido.");
         }
@@ -183,6 +192,12 @@ public class Biblioteca {
 
     public void removerItem(int id) throws BibliotecaException {
         ItemAcervo item = buscarItem(id);
+        if (emprestimos.stream().anyMatch(e -> e.getItem().getId() == id)) {
+            throw new OperacaoInvalidaException("Item possui historico de emprestimos e nao pode ser removido.");
+        }
+        if (reservas.stream().anyMatch(r -> r.getItem().getId() == id)) {
+            throw new OperacaoInvalidaException("Item possui historico de reservas e nao pode ser removido.");
+        }
         if (!item.isDisponivel()) {
             throw new OperacaoInvalidaException("Item emprestado nao pode ser removido.");
         }
@@ -268,8 +283,11 @@ public class Biblioteca {
         if (!usuario.isAtivo()) {
             throw new OperacaoInvalidaException("Usuario inativo nao pode realizar reservas.");
         }
+        if (!(item instanceof Livro)) {
+            throw new OperacaoInvalidaException("Apenas livros emprestados podem ser reservados.");
+        }
         if (item.isDisponivel()) {
-            throw new OperacaoInvalidaException("Item disponivel nao precisa ser reservado. Realize o emprestimo.");
+            throw new OperacaoInvalidaException("Livro disponivel nao precisa ser reservado. Realize o emprestimo.");
         }
         boolean reservaDuplicada = reservas.stream()
                 .anyMatch(r -> r.estaAtiva() && r.getUsuario().getId() == usuarioId && r.getItem().getId() == itemId);
@@ -366,10 +384,6 @@ public class Biblioteca {
         return emprestimosEmAberto;
     }
 
-    public int getLimiteMaximoEmprestimosPorUsuario() {
-        return 3;
-    }
-
     public int getLimiteEmprestimosDoUsuario(int usuarioId) throws BibliotecaException {
         return buscarUsuario(usuarioId).getLimiteEmprestimos();
     }
@@ -426,7 +440,7 @@ public class Biblioteca {
         proximoFuncionarioId = Math.max(proximoFuncionarioId, funcionario.getId() + 1);
     }
 
-    public void adicionarItemCarregado(ItemAcervo item, int autorId, int categoriaId) {
+    public void adicionarItemCarregado(ItemAcervo item, int categoriaId) {
         itens.put(item.getId(), item);
         proximoItemId = Math.max(proximoItemId, item.getId() + 1);
         proximoCategoriaId = Math.max(proximoCategoriaId, categoriaId + 1);
